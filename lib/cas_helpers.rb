@@ -18,7 +18,7 @@ module CasHelpers
   end
 
   def process_cas_login(request, session)
-    if request[:ticket] && request[:ticket] != session[:ticket]
+    if request[:ticket] && request[:ticket] != session[:cas_ticket]
 
       service_url = read_service_url(request)
       st = read_ticket(request[:ticket], service_url)
@@ -28,6 +28,8 @@ module CasHelpers
       if st.success
         session[:cas_ticket] = st.ticket
         session[:cas_user] = st.user
+        session[:cas_extra_attributes] = st.extra_attributes
+        return service_url
       else
         raise "Service Ticket validation failed! #{st.failure_code} - #{st.failure_message}"
       end
@@ -62,9 +64,10 @@ module CasHelpers
     service_url = url(request.path_info)
     if request.GET
       params = request.GET.dup
+      params.delete("ticket")
       params.delete(:ticket)
-      if params
-        [service_url, Rack::Utils.build_nested_query(params)].join('?')
+      unless params.empty?
+        return [service_url, Rack::Utils.build_nested_query(params)].join('?')
       end
     end
     return service_url

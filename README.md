@@ -1,3 +1,9 @@
-# Rubycas Client Sinatra Example
+# bridgelmsdocs CAS proxy
 
-A working example that uses the CAS Client library to provide authentication for a sinatra app.
+Environment config:
+
+- `ENV['CAS_BASE_URL']`: path to the CAS server
+- `ENV['TICKET_STORE_DIR']`: where to store tickets
+- `ENV['SECRET']`: cookie store secret/salt
+- `ENV['BRIDGELMSDOCS_ROOT']`: path to where the docs app lives
+

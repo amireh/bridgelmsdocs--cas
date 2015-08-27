@@ -1,9 +1,7 @@
 require 'bundler/setup'
 
-$:.unshift "#{File.dirname(__FILE__)}/lib"
-
-require 'cas_example'
+require_relative './lib/app'
 
 use Rack::Lint
 
-run CasExample
+run App

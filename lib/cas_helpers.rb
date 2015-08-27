@@ -1,9 +1,18 @@
-require 'active_support/all' #bug in rubycas client requires this
+require 'active_support/all' # bug in rubycas client requires this
 require 'rubycas-client'
 
 module CasHelpers
-
-  CAS_CLIENT = CASClient::Client.new(:cas_base_url => ENV['CAS_BASE_URL'], :log => Logger.new(STDOUT), :ticket_store_config => {:storage_dir => ENV['TICKET_STORE_DIR']})
+  Client = CASClient::Client.new({
+    cas_base_url: ENV['CAS_BASE_URL'],
+    login_url: "#{ENV['CAS_BASE_URL']}/login",
+    logout_url: "#{ENV['CAS_BASE_URL']}/logout",
+    validate_url: "#{ENV['CAS_BASE_URL']}/serviceValidate",
+    log: Logger.new(STDOUT),
+    enable_single_sign_out: true,
+    ticket_store_config: {
+      storage_dir: ENV['TICKET_STORE_DIR']
+    }
+  })
 
   def need_authentication(request, session)
     if session[:cas_ticket]
@@ -23,12 +32,13 @@ module CasHelpers
       service_url = read_service_url(request)
       st = read_ticket(request[:ticket], service_url)
 
-      CAS_CLIENT.validate_service_ticket(st)
+      Client.validate_service_ticket(st)
 
       if st.success
         session[:cas_ticket] = st.ticket
         session[:cas_user] = st.user
         session[:cas_extra_attributes] = st.extra_attributes
+
         return service_url
       else
         raise "Service Ticket validation failed! #{st.failure_code} - #{st.failure_message}"
@@ -44,12 +54,13 @@ module CasHelpers
   def require_authorization(request, session)
     if !logged_in?(request, session)
       service_url = read_service_url(request)
-      url = CAS_CLIENT.add_service_to_login_url(service_url)
+      url = Client.add_service_to_login_url(service_url)
       redirect url
     end
   end
 
   private
+
   def read_ticket(ticket_str, service_url)
     return nil unless ticket_str and !ticket_str.empty?
 
@@ -62,14 +73,17 @@ module CasHelpers
 
   def read_service_url(request)
     service_url = url(request.path_info)
+
     if request.GET
       params = request.GET.dup
       params.delete("ticket")
       params.delete(:ticket)
+
       unless params.empty?
         return [service_url, Rack::Utils.build_nested_query(params)].join('?')
       end
     end
+
     return service_url
   end
 end

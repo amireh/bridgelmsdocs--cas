@@ -1,8 +1,8 @@
 require 'sinatra/base'
-require 'cas_helpers'
+require_relative './cas_helpers'
 
-class CasExample < Sinatra::Base
-  use Rack::Session::Cookie, :secret => 'changed'
+class App < Sinatra::Base
+  use Rack::Session::Cookie, secret: ENV['SECRET']
 
   helpers CasHelpers
 
@@ -14,10 +14,8 @@ class CasExample < Sinatra::Base
     process_cas_login(request, session)
   end
 
-  get "/protected" do
-    require_authorization(request, session) unless logged_in?(request, session)
-
-    "you are logged in as #{session[:cas_user]}"
+  get '/logout' do
+    CASClient::Frameworks::Rails::Filter.logout(CasHelpers::Client)
   end
 
   not_found do

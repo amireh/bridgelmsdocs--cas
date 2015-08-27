@@ -1,7 +1,7 @@
 require 'active_support/all' # bug in rubycas client requires this
 require 'rubycas-client'
 
-module CasHelpers
+module CASHelpers
   Client = CASClient::Client.new({
     cas_base_url: ENV['CAS_BASE_URL'],
     login_url: "#{ENV['CAS_BASE_URL']}/login",
@@ -44,7 +44,6 @@ module CasHelpers
         raise "Service Ticket validation failed! #{st.failure_code} - #{st.failure_message}"
       end
     end
-
   end
 
   def logged_in?(request, session)

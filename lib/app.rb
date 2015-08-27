@@ -1,25 +1,22 @@
-require 'sinatra/base'
 require_relative './cas_helpers'
 
-class App < Sinatra::Base
+configure do
   use Rack::Session::Cookie, secret: ENV['SECRET']
 
-  helpers CasHelpers
+  helpers CASHelpers
 
-  configure do
-    set :public_folder, ENV['BRIDGELMSDOCS_ROOT']
+  set :public_folder, ENV['BRIDGELMSDOCS_ROOT']
+end
+
+before do
+  process_cas_login(request, session)
+end
+
+not_found do
+  if params[:ticket]
+    return redirect '/'
   end
 
-  before do
-    process_cas_login(request, session)
-  end
-
-  get '/logout' do
-    CASClient::Frameworks::Rails::Filter.logout(CasHelpers::Client)
-  end
-
-  not_found do
-    require_authorization(request, session) unless logged_in?(request, session)
-    File.read(File.join(settings.public_folder, "index.html"))
-  end
+  require_authorization(request, session) unless logged_in?(request, session)
+  File.read(File.join(settings.public_folder, "index.html"))
 end

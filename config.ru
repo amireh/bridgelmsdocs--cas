@@ -1,7 +1,7 @@
 require 'bundler/setup'
 
+Bundler.require('default');
+
 require_relative './lib/app'
 
-use Rack::Lint
-
-run App
+run Sinatra::Application
